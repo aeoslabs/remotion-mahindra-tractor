@@ -1,42 +1,48 @@
 {
-  "name": "mahindra-overlay",
-  "version": "1.0.0",
-  "description": "My Remotion video",
-  "sideEffects": [
-    "*.css"
-  ],
-  "repository": {},
-  "license": "UNLICENSED",
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "webpack"
-      ]
-    }
-  },
-  "dependencies": {
-    "@remotion/bundler": "4.0.171",
-    "@remotion/cli": "4.0.171",
-    "@remotion/zod-types": "4.0.171",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "remotion": "4.0.171",
-    "zod": "3.22.3"
-  },
-  "devDependencies": {
-    "@remotion/eslint-config": "4.0.171",
-    "@types/react": "^18.0.26",
-    "@types/web": "^0.0.143",
-    "eslint": "^8.43.0",
-    "prettier": "^3.2.5",
-    "@remotion/tailwind": "4.0.171",
-    "typescript": "5.4.5"
-  },
-  "scripts": {
-    "start": "remotion studio",
-    "build": "remotion render MyComp out/video.mp4",
-    "upgrade": "remotion upgrade",
-    "test": "eslint src --ext ts,tsx,js,jsx && tsc"
-  },
-  "packageManager": "pnpm@9.0.6"
+	"name": "mahindra-overlay",
+	"version": "1.0.0",
+	"description": "My Remotion video",
+	"sideEffects": [
+		"*.css"
+	],
+	"repository": {},
+	"type": "module",
+	"license": "UNLICENSED",
+	"pnpm": {
+		"peerDependencyRules": {
+			"ignoreMissing": [
+				"webpack"
+			]
+		}
+	},
+	"dependencies": {
+		"@ai-sdk/openai": "^0.0.26",
+		"@remotion/bundler": "4.0.172",
+		"@remotion/cli": "4.0.172",
+		"@remotion/zod-types": "4.0.172",
+		"@supabase/supabase-js": "^2.43.4",
+		"ai": "^3.1.31",
+		"openai": "^4.50.0",
+		"react": "^18.0.0",
+		"react-dom": "^18.0.0",
+		"remotion": "4.0.172",
+		"replicate": "^0.30.2",
+		"zod": "3.22.3"
+	},
+	"devDependencies": {
+		"@remotion/eslint-config": "4.0.172",
+		"@remotion/tailwind": "4.0.172",
+		"@types/react": "^18.0.26",
+		"@types/web": "^0.0.143",
+		"eslint": "^8.43.0",
+		"prettier": "^3.2.5",
+		"typescript": "5.4.5"
+	},
+	"scripts": {
+		"start": "remotion studio",
+		"build": "remotion render MyComp out/video.mp4",
+		"upgrade": "remotion upgrade",
+		"test": "eslint src --ext ts,tsx,js,jsx && tsc"
+	},
+	"packageManager": "pnpm@9.0.6"
 }

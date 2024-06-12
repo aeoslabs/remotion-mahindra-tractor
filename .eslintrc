@@ -1,6 +1,5 @@
 {
-	"extends": "@remotion",
 	"env": {
-		"node": true
-	}
+		"node": true,
+	},
 }
