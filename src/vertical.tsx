@@ -18,7 +18,7 @@ export const VerticalComp = (props: {
 }) => {
 	const {height, width} = useVideoConfig();
 	return (
-		<AbsoluteFill className="bg-red-600 items-center justify-center">
+		<AbsoluteFill className="items-center justify-center">
 			<Img
 				className="z-10 absolute"
 				src={props.frameSrc}

@@ -13,9 +13,8 @@ import fs from 'fs/promises';
 import {STORAGE_BUCKETS} from '../src/constants';
 import {getVideoDimensionsUsingFFProbe} from './ffmpeg-test.js';
 
-const successful = JSON.parse(
-	(await fs.readFile('successful.json')).toString(),
-) as string[];
+const failed =
+	(JSON.parse((await fs.readFile('failed.json')).toString()) as string[]) ?? [];
 
 const supabaseAdmin = createClient(
 	'https://hoehorhkkbxgdykhdxju.supabase.co',
@@ -39,71 +38,91 @@ if (!allVideosToOverlay?.data) {
 
 // throw new Error('stop');
 
+// console.log(allVideosToOverlay);
+
 const onlyVideos = allVideosToOverlay.data.filter((f) =>
-	f.name.endsWith('.mp4'),
+	f.name.includes('mp4'),
 );
 
 console.log(`There are total ${onlyVideos.length} videos to process`);
 
 for await (const f of onlyVideos) {
-	const filepath = ['temp', 'files_to_process', 'good_images', f.name].join(
-		'/',
-	);
-
 	const videoUrl = `http://127.0.0.1:45723/temp/files_to_process/good_images/${f.name}`;
 
-	// const videoUrl = supabaseAdmin.storage
-	// 	.from(STORAGE_BUCKETS.temp)
-	// 	.getPublicUrl(filepath).data.publicUrl;
+	try {
+		const successful = JSON.parse(
+			(await fs.readFile('successful.json')).toString(),
+		) as string[];
 
-	// const {error, data} = await supabaseAdmin.storage
-	// 	.from(STORAGE_BUCKETS.temp)
-	// 	.createSignedUrl(filepath, 60);
+		// const filepath = ['temp', 'files_to_process', 'good_images', f.name].join(
+		// 	'/',
+		// );
 
-	// if (error) {
-	// 	console.error(f);
-	// 	console.error(error);
-	// 	throw new Error('Error getting signed url');
-	// }
+		// const videoUrl = supabaseAdmin.storage
+		// 	.from(STORAGE_BUCKETS.tempS)
+		// 	.getPublicUrl(filepath).data.publicUrl;
 
-	const videoRes = await fetch(videoUrl);
+		// const {error, data} = await supabaseAdmin.storage
+		// 	.from(STORAGE_BUCKETS.temp)
+		// 	.createSignedUrl(filepath, 60);
 
-	const videoBuffer = await videoRes.blob();
+		// if (error) {
+		// 	console.error(f);
+		// 	console.error(error);
+		// 	throw new Error('Error getting signed url');
+		// }
 
-	const tempFilePath = `tempvids/mahindra-${f.name}`;
-	// write to path
+		const videoRes = await fetch(videoUrl);
 
-	await fs.writeFile(
-		tempFilePath,
-		Buffer.from(await videoBuffer.arrayBuffer()),
-	);
+		const videoBuffer = await videoRes.blob();
 
-	const {height, width} = (await getVideoDimensionsUsingFFProbe(
-		tempFilePath,
-	)) as {
-		width: number;
-		height: number;
-	};
+		const tempFilePath = `tempvids/mahindra-${f.name}`;
+		// write to path
 
-	console.log('Dimensions', {height, width});
+		await fs.writeFile(
+			tempFilePath,
+			Buffer.from(await videoBuffer.arrayBuffer()),
+		);
 
-	const orientation = height > width ? 'vertical' : 'horizontal';
+		const {height, width} = (await getVideoDimensionsUsingFFProbe(
+			tempFilePath,
+		)) as {
+			width: number;
+			height: number;
+		};
 
-	const output = `concatenated_outputs/${f.name}`;
+		console.log('Dimensions', {height, width});
 
-	await runRemotion({
-		output,
-		height,
-		width,
-		orientation,
-		videoSrc: videoUrl,
-	});
+		const orientation = height > width ? 'vertical' : 'horizontal';
 
-	successful.push(f.name);
-	await fs.writeFile('successful.json', JSON.stringify(successful));
+		const output = `concatenated_outputs/${f.name}`;
+
+		// if (orientation === 'horizontal') continue;
+
+		await runRemotion({
+			output,
+			height: orientation === 'vertical' ? 1920 : 1080,
+			width: orientation === 'vertical' ? 1080 : 1920,
+			orientation,
+			videoSrc: videoUrl,
+		});
+
+		successful.push(f.name);
+		await fs.writeFile('successful.json', JSON.stringify(successful));
+
+		await uploadFileTosupabase({
+			bucket: STORAGE_BUCKETS.temp,
+			fileBuffer: await fs.readFile(output),
+			filePath: `final_outputs3/${f.name}`,
+		});
+	} catch (err) {
+		failed.push(f.name);
+		await fs.writeFile('failed.json', JSON.stringify(failed));
+	}
 }
 
 import {exec} from 'child_process';
+import {uploadFileTosupabase} from '../lib/storage.js';
 
 async function runRemotion(props: {
 	output: string;
@@ -112,8 +131,10 @@ async function runRemotion(props: {
 	orientation: 'vertical' | 'horizontal';
 	videoSrc: string;
 }) {
-	const height = props.orientation === 'vertical' ? 1080 : 1920;
-	const width = props.orientation === 'vertical' ? 1920 : 1080;
+	// const height = props.orientation === 'vertical' ? 1080 : 1920;
+	// const width = props.orientation === 'vertical' ? 1920 : 1080;
+
+	const {height, width} = props;
 
 	return new Promise((resolve, reject) => {
 		const command = `npx remotion render singlecomp --output=${props.output} --height=${height} --width=${width} --config=remotion.config.ts --props='${JSON.stringify(
